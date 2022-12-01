@@ -6,14 +6,16 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
-# !pip install missingno
+# !pip install missingno #eksik değer kısmında kullanıyoruz bu kütüphaneyi
 import missingno as msno
 from datetime import date
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import LocalOutlierFactor
-from sklearn.preprocessing import MinMaxScaler, LabelEncoder, StandardScaler, RobustScaler
+from sklearn.preprocessing import MinMaxScaler, LabelEncoder, StandardScaler, RobustScaler #standartlaştırma ve dönüşüm 
 
+
+#aşağıdakiler de görseller için ayarlamalar tüm sütun satır göster vs
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.float_format', lambda x: '%.3f' % x)
@@ -35,7 +37,8 @@ def load():
 df = load()
 df.head()
 
-
+#yukarıda iki ayrı veri seti var titanik küçük ölçekli diğeri büyük ölçekli kurdupumuz fonksiyonların değişik veri setlerinde nasıl davrandığını görmemiz için yapıyoruz bunu
+#proje kısmında solsa datasets diye bir başlık olacak oraya iki veri setini de yerleştir oraya oradan path'ini kopyala
 
 #############################################
 # 1. Outliers (Aykırı Değerler)
@@ -49,28 +52,36 @@ df.head()
 # Grafik Teknikle Aykırı Değerler
 ###################
 
-sns.boxplot(x=df["Age"])
+sns.boxplot(x=df["Age"]) #kutu grafik sayısal değişkenin dağılım bilgisini verir bize.
+#soru? kutu grafikten sonra en yaygın kullanılan teknik hangisidir? Histogram tekniğidir
 plt.show()
+#şimdi fonksyionu çalştırdığımızda gördük ki aykırı değerler var kutunun dışında 
+
 
 ###################
 # Aykırı Değerler Nasıl Yakalanır?
 ###################
+#çeyrek değer hesabı yapalımm
 
-q1 = df["Age"].quantile(0.25)
-q3 = df["Age"].quantile(0.75)
-iqr = q3 - q1
+
+q1 = df["Age"].quantile(0.25) #out 20.125
+q3 = df["Age"].quantile(0.75) #out 38.0
+iqr = q3 - q1 #17.875
+#yukarıda hesapladığımız iqr değeri ile;
+#aşağıda alt üst limitlerimizi yapıcaz şimdi 1.5 birim aşağısı yukarısı bizim limitlerimiz olucak
 up = q3 + 1.5 * iqr
-low = q1 - 1.5 * iqr
+low = q1 - 1.5 * iqr #out -6.68 ama eksi yaş olmaz zaten bunu görmezden gelicek 
 
-df[(df["Age"] < low) | (df["Age"] > up)]
+df[(df["Age"] < low) | (df["Age"] > up)] #bu kod bizim hesapladığımız limitler dışında olanlar yani aykırı değerlerimiz
 
-df[(df["Age"] < low) | (df["Age"] > up)].index
+df[(df["Age"] < low) | (df["Age"] > up)].index # bunun yukarıdaki koddan farkı yukarıda aykırı değerlerimizin tablosu vardı
+#şimdi direkt aykırı değerleri kulaklarından tuttuk getirdik 
 
 ###################
 # Aykırı Değer Var mı Yok mu?
 ###################
 
-df[(df["Age"] < low) | (df["Age"] > up)].any(axis=None)
+df[(df["Age"] < low) | (df["Age"] > up)].any(axis=None) #out True kod akışında içerikle bulk scriptle ilgilenmiyor olabilirsin sadece true false var mı yok mu öğrenmek istiyorsundur
 df[(df["Age"] < low)].any(axis=None)
 
 # 1. Eşik değer belirledik.
@@ -80,7 +91,7 @@ df[(df["Age"] < low)].any(axis=None)
 ###################
 # İşlemleri Fonksiyonlaştırmak
 ###################
-
+#elimizde bir sürü veri var tek tek nasıl yapıcaz. daha programatik ilerlememiz lazım değişken özelinde tek tek uğraşmaa
 
 def outlier_thresholds(dataframe, col_name, q1=0.25, q3=0.75):
     quartile1 = dataframe[col_name].quantile(q1)
@@ -117,7 +128,12 @@ check_outlier(df, "Fare")
 dff = load_application_train()
 dff.head()
 
+#bu grab_col_names kardeş çok güzel bi kardeş
 def grab_col_names(dataframe, cat_th=10, car_th=20):
+    #şimdi bazı dedik ya aşağıda açıklamada bazı değişkenler vardır numerik görünür ama kategorikdir. 
+    #cat_th=10 10'dan az değişkeni varsa sayısal olsa da kategorik bir değişkendir bu dedik. (sayıyı subjettiftir bu arada)
+    #20'de aynı şekilde
+    #burada değişken tipinin object olmamasına dikkat
     """
 
     Veri setindeki kategorik, numerik ve kategorik fakat kardinal değişkenlerin isimlerini verir.
